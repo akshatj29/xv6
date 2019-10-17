@@ -7,7 +7,7 @@ int
 main(int argc, char *argv[])
 {
  int i;
-  i = setpri(getpid(), 2);
+  i = setpri(getpid(), 20);
   printf(1,"Set Pri = %d", i);
   
   exit();

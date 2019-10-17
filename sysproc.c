@@ -44,8 +44,11 @@ sys_setpri(void)
 
   if(argint(0, &pid) < 0)
     return -1;
-  if(argint(1, &pri) < 0 || argint(1, &pri) > 3)
+  if(argint(1, &pri) < 0)
     return -1;
+  if(pri<0 || pri>3)
+    return -1;
+  //cprintf(argint(1, &pri));
   return setpri(pid, pri);
 }
 
