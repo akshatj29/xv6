@@ -120,6 +120,8 @@ int             wait(void);
 void            wakeup(void*);
 void            yield(void);
 int		setpri(int, int);
+int		getpri(int);
+int		fork2(int);
 
 // swtch.S
 void            swtch(struct context**, struct context*);

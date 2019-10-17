@@ -53,6 +53,28 @@ sys_setpri(void)
 }
 
 int
+sys_getpri(void)
+{
+  int pid;
+
+  if(argint(0, &pid) < 0)
+    return -1;
+  return getpri(pid);
+}
+
+int
+sys_fork2(void)
+{
+  int pri;
+
+  if(argint(0, &pri) < 0)
+    return -1;
+  if(pri<0 || pri>3)
+    return -1;
+  return fork2(pri);
+}
+
+int
 sys_getpid(void)
 {
   return myproc()->pid;

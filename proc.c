@@ -343,7 +343,7 @@ scheduler(void)
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
       // before jumping back to us.
-      cprintf("Check System Priority = %d \n", ptable.pstatus.priority[2]);
+      cprintf("System: Pname=%s PID=%d \n", p->name, p->pid);
       c->proc = p;
       switchuvm(p);
       p->state = RUNNING;
@@ -516,7 +516,70 @@ setpri(int pid, int pri)
     i++;
   }
   release(&ptable.lock);
+
   return -1;
+}
+
+int
+getpri(int pid)
+{
+  struct proc *p;
+
+  acquire(&ptable.lock);
+  int i = 0;
+  for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    if(p->pid == pid && p->state !=UNUSED){
+      // Wake process from sleep if necessary.
+      release(&ptable.lock);
+      return ptable.pstatus.priority[i];
+    }
+    i++;
+  }
+  release(&ptable.lock);
+  return -1;
+}
+
+int
+fork2(int pri)
+{
+  int i, pid;
+  struct proc *np;
+  struct proc *curproc = myproc();
+
+  // Allocate process.
+  if((np = allocproc()) == 0){
+    return -1;
+  }
+
+  // Copy process state from proc.
+  if((np->pgdir = copyuvm(curproc->pgdir, curproc->sz)) == 0){
+    kfree(np->kstack);
+    np->kstack = 0;
+    np->state = UNUSED;
+    return -1;
+  }
+  np->sz = curproc->sz;
+  np->parent = curproc;
+  *np->tf = *curproc->tf;
+
+  // Clear %eax so that fork returns 0 in the child.
+  np->tf->eax = 0;
+
+  for(i = 0; i < NOFILE; i++)
+    if(curproc->ofile[i])
+      np->ofile[i] = filedup(curproc->ofile[i]);
+  np->cwd = idup(curproc->cwd);
+
+  safestrcpy(np->name, curproc->name, sizeof(curproc->name));
+
+  pid = np->pid;
+
+  acquire(&ptable.lock);
+
+  np->state = RUNNABLE;
+  release(&ptable.lock);
+  setpri(pid,pri);
+  return pid;
 }
 
 // Print a process listing to console.  For debugging.
